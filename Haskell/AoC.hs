@@ -16,7 +16,12 @@ import Data.List
 import Data.List.Extra
 import Data.Ix
 import Data.Graph
-import qualified Data.HashMap as H
+---- Was previously: but is obsolete
+-- import qualified Data.HashMap as H
+---- Best way now?
+import qualified Data.Map as H
+---- Maybe this possibility?
+-- import qualified Data.HashMap.Strict as H
 import Data.Hashable
 import Data.STRef
 import Data.Array
@@ -91,6 +96,10 @@ type BoolMap = Array Coord Bool
 
 type XYZCoord = (Int, Int, Int)
 
+inBounds :: Array Coord a -> Coord -> Bool
+inBounds grid (y, x) = y >= lor && y <= hir && x >= loc && y <= hic
+  where ((lor,loc),(hir,hic)) = bounds grid
+
 getCharMap :: IO CharMap
 getCharMap = do
     contents <- getContents
@@ -148,11 +157,13 @@ showBoolMap grid = unlines $ map getRow $ [lor..hir]
 data Turn = L | R deriving (Eq, Show)
 data Cardir = N | S | W | E deriving (Eq, Show)
 
+chDir :: Char -> Cardir
 chDir '^' = N
 chDir 'v' = S
 chDir '<' = W
 chDir '>' = E
 
+dirCh :: Cardir -> Char
 dirCh N = '^'
 dirCh S = 'v'
 dirCh W = '<'
@@ -168,10 +179,24 @@ inDir S = (1, 0)
 inDir W = (0, -1)
 inDir E = (0, 1)
 
+-- Move a position one step in the given direction
+move :: Coord -> Cardir -> Coord
+move c dir = add2 c $ inDir dir
+
+
 lookIn N = [(-1,-1), (-1, 0), (-1, 1)]
 lookIn S = [(1,-1), (1, 0), (1, 1)]
 lookIn W = [(-1,-1), (0, -1), (1, -1)]
 lookIn E = [(-1,1), (0, 1), (1, 1)]
+
+-- Turn 90 degrees to the right
+turnRight :: Cardir -> Cardir
+turnRight N = E
+turnRight S = W
+turnRight W = N
+turnRight E = S
+
+
 
 moveTo dir p = add2 p $ inDir dir
 
